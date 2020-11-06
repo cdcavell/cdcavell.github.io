@@ -1,0 +1,122 @@
+---
+layout: post
+title: Net Core MVC OpenIdConnect Authentication - New User Registration
+---
+
+Interesting scenario I faced recently, develop a process that authenticates a user; check for an existing registration; and if not found, redirect to registration process. I solved this with a combination of `OpenIdConnect` `OnTicketReceived` event handler along with [`Authorization Policies`](https://docs.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-3.1).
+
+In `Startup.cs` `ConfigureServices` method, I have a call to the `OnTicketRecieved` handler in the Events option of the `AddOpenIdConnect` option of `services.AddAuthentication`. This allows me to inspect the `Identity` `Claims` sent from IdP and add additional claims to `Identity` before further pipeline processing. I am able to get the `dbContext` from `HttpContext` and perform a lookup to check for existing registration record based on retrieved email claim type. If found I set a custom claim type “_registration_” to “_existing_” otherwise I set to “_new_”. This custom claim type is then added to `Identity` `Claims` and `Response` is sent on through pipeline for further processing.
+
+```C#
+    options.Events = new OpenIdConnectEvents
+    {
+        OnRedirectToIdentityProvider = redirectContext =>
+        {
+            redirectContext.ProtocolMessage.SetParameter("acr_values", "mfa");
+            return Task.FromResult(0);
+        },
+
+        OnTicketReceived = ticketReceivedContext =>
+        {
+            var receivedClaims = ticketReceivedContext.Principal.Claims;
+            var additionalClaims = new List<Claim>();
+
+            Claim emailClaim = receivedClaims.FirstOrDefault(x => x.Type == "email");
+            if (emailClaim != null)
+            {
+                CDCavellDbContext dbContext = (CDCavellDbContext)ticketReceivedContext.HttpContext
+                    .RequestServices.GetService(typeof(CDCavellDbContext));
+
+                if (Registration.IsRegistered(emailClaim.Value.Clean(), dbContext))
+                {
+                    additionalClaims.Add(new Claim("registration", "existing"));
+                    ticketReceivedContext.Principal.AddIdentity(new ClaimsIdentity(additionalClaims));
+                }
+                else
+                {
+                    additionalClaims.Add(new Claim("registration", "new"));
+                    ticketReceivedContext.Principal.AddIdentity(new ClaimsIdentity(additionalClaims));
+                }
+            }
+
+            return Task.FromResult(ticketReceivedContext.Result); 
+        }
+    };
+```
+
+I also register a “_NewRegistration_” and “_ExistingRegistration_” policy in `Startup.cs` `ConfigureServices` as well as the corresponding handler classes for direct injection.
+
+```C#
+    // Register Application Authorization
+    services.AddAuthorization(options =>
+    {
+        options.AddPolicy("Authenticated", policy =>
+        {
+            policy.Requirements.Add(new AuthenticatedRequirement(true));
+        });
+        options.AddPolicy("NewRegistration", policy =>
+        {
+            policy.Requirements.Add(new AuthenticatedRequirement(true));
+            policy.Requirements.Add(new NewRegistrationRequirement(true));
+        });
+        options.AddPolicy("ExistingRegistration", policy =>
+        {
+            policy.Requirements.Add(new AuthenticatedRequirement(true));
+            policy.Requirements.Add(new ExistingRegistrationRequirement(true));
+        });
+        options.AddPolicy("Administration", policy =>
+        {
+            policy.Requirements.Add(new AuthenticatedRequirement(true));
+            policy.Requirements.Add(new ExistingRegistrationRequirement(true));
+            policy.Requirements.Add(new AdministrationRequirement(true));
+        });
+    });
+
+    // Registered authorization handlers
+    services.AddSingleton<IAuthorizationHandler, AuthenticatedHandler>();
+    services.AddSingleton<IAuthorizationHandler, NewRegistrationHandler>();
+    services.AddSingleton<IAuthorizationHandler, ExistingRegistrationHandler>();
+    services.AddSingleton<IAuthorizationHandler, AdministrationHandler>();
+```
+
+If `Identity` follows the normal process flow of application, it will access the _Login Action_ of _Account Controller_. 
+
+```C#
+    [Authorize(Policy = "Authenticated")]
+    [HttpGet]
+    public IActionResult Login()
+    {
+        var isNewRegistration = _authorizationService.AuthorizeAsync(User, "NewRegistration").Result;
+        if (isNewRegistration.Succeeded)
+        {
+            return RedirectToAction("Registration", "Account");
+        }
+
+        return RedirectToAction("Index", "Home");
+    }
+```
+
+The _Login Action_ is protected with the “_Authenticated_” policy which is defined to only allow Identities that have been authenticated and have an email claim.
+
+```C#
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AuthenticatedRequirement requirement)
+    {
+        var user = context.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            List<Claim> roles = user.Claims.Where(x => x.Type == "email").ToList();
+            if (roles != null && roles.Count > 0)
+            {
+                context.Succeed(requirement);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+```
+
+_Login Action_ will check if `Identity` has a "_NewRegistration_" policy and if so redirects to registration process otherwise redirects to _Index Action_ of _Home Controller_. This check is performed by calling `AuthorizeAsync` of the `IAuthorizationService` interface direct injected in constructor method of _Account Controller_.
+
+The application uses both the "_AuthenticatedRequirment_" and "_ExistingRegistrationRequirment_" in defining all other policies thus securing controllers and actions from requests outside of normal logic flow returning a `Http Status Code 401`.
+
+###### Full source can be found in [GitHub](https://github.com/) repository [cdcavell.name](https://github.com/cdcavell/cdcavell.name).
