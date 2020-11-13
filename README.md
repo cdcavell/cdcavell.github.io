@@ -1,4 +1,4 @@
-# [cdcavell.name](https://cdcavell.name)
+# [blog.cdcavell.name](https://blog.cdcavell.name)
 Personal Blog of Christopher D. Cavell
 <hr />
 
