@@ -53,16 +53,16 @@ baseurl: "https://blog.cdcavell.name"
 # !! You don't need to change any of the configuration flags below !!
 #
 
-webrick:
-    headers:
-        X-Content-Type-Options: "nosniff"
-        X-Frame-Options: "SAMEORIGIN"
-        Content-Security-Policy: "default-src 'self'; img-src 'self' https://cdcavell.name https://*.cdcavell.name data:; upgrade-insecure-requests;"
-        X-Content-Security-Policy: "default-src 'self'; img-src 'self' https://cdcavell.name https://*.cdcavell.name data:; upgrade-insecure-requests;"
-        Referrer-Policy: "no-referrer"
-        X-Xss-Protection: "1; mode=block"
-        X-Permitted-Cross-Domain-Policies: "none"
-        Permissions-Policy: "geolocation=(self), midi=(self), notifications=(self), push=(self), sync-xhr=(self), microphone=(self), camera=(self), magnetometer=(self), gyroscope=(self), speaker=(self), vibrate=(self), fullscreen=(self), payment=(self)"
+#webrick:
+#    headers:
+#        X-Content-Type-Options: "nosniff"
+#        X-Frame-Options: "SAMEORIGIN"
+#        Content-Security-Policy: "default-src 'self'; img-src 'self' https://cdcavell.name https://*.cdcavell.name data:; upgrade-insecure-requests;"
+#        X-Content-Security-Policy: "default-src 'self'; img-src 'self' https://cdcavell.name https://*.cdcavell.name data:; upgrade-insecure-requests;"
+#        Referrer-Policy: "no-referrer"
+#        X-Xss-Protection: "1; mode=block"
+#        X-Permitted-Cross-Domain-Policies: "none"
+#        Permissions-Policy: "geolocation=(self), midi=(self), notifications=(self), push=(self), sync-xhr=(self), microphone=(self), camera=(self), magnetometer=(self), gyroscope=(self), speaker=(self), vibrate=(self), fullscreen=(self), payment=(self)"
 
 permalink: /:title/
 
