@@ -1,7 +1,10 @@
-    <meta charset="utf-8" />
+﻿    <meta charset="utf-8" />
     <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://cdcavell.name https://*.cdcavell.name data:; object-src 'none'; base-uri 'self'; upgrade-insecure-requests; " />
+    <meta name="Permissions-Policy" content="geolocation=(self), midi=(self), notifications=(self), push=(self), sync-xhr=(self), microphone=(self), camera=(self), magnetometer=(self), gyroscope=(self), speaker=(self), vibrate=(self), fullscreen=(self), payment=(self)" />
 
     {% if page.excerpt %}
     <meta name="description" content="{{ page.excerpt| strip_html }}" />
@@ -16,3 +19,21 @@
     <meta property="og:title" content="{{ page.title }}" />
     <meta property="twitter:title" content="{{ page.title }}" />
     {% endif %}
+
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="cdcavell.name" />
+    <meta property="og:image" content="https://cdcavell.name/img/thumbnail.png" />
+    <meta property="og:url" content="https://blog.cdcavell.name/">
+    <meta property="og:type" content="website" />
+    <meta property="fb:app_id" content="912870229223717" />
+
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:site" content="@@Christo52186463" />
+    <meta property="twitter:creator" content="@@Christo52186463" />
+    <meta property="twitter:description" content="General ramblings from yet another blog site." />
+    <meta property="twitter:image" content="https://cdcavell.name/img/twitter-thumbnail.png" />
+
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="google-site-verification" content="v2DPETQobg3Ip1zEugzvNdHM9-oqH5TdPKq2ycrn1w0" />
+
